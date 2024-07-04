@@ -3,6 +3,9 @@
 import React, { useEffect, useState } from 'react';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import {authClient} from '@/lib/firebaseClient'
+import { onAuthStateChanged } from 'firebase/auth';
+import { Line } from 'react-chartjs-2';
+import 'chart.js/auto';
 import Image from 'next/image';
 import Link from 'next/link';
 import Sugar from 'sugar';
@@ -169,6 +172,10 @@ const TranscriptionsPage = () => {
               throw new Error(`Server error: ${response.statusText}`);
           }
           const ans = await response.json();
+          if(ans.length===0){
+            setError1('No transcriptions found. Please Analyze a file first.');
+          }
+          console.log(ans);
           setResults(ans.data);
       } catch (error: any) {
           console.error('Error fetching transcriptions:', error);
@@ -179,10 +186,14 @@ const TranscriptionsPage = () => {
   };
 
   useEffect(() => {
-    if (status === 'authenticated') {
+    const unsubscribe = onAuthStateChanged(authClient, (user) => {
+      if (user) {
         fetchTranscriptions();
-    }
-}, [status]);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [status]);
 
   const formatDate = (timestamp: any) => {
     const date = Sugar.Date.create(timestamp);
@@ -207,7 +218,7 @@ const TranscriptionsPage = () => {
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+        {/* <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <Breadcrumb className=" md:flex">
             <BreadcrumbList>
               <BreadcrumbItem>
@@ -260,7 +271,7 @@ const TranscriptionsPage = () => {
               <DropdownMenuItem onClick={() => signOut()}>Logout</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </header>
+        </header> */}
         <main className="grid flex-1 grid-cols-1 gap-4 p-4 sm:px-6 sm:py-0 md:grid-cols-2 md:gap-8 lg:grid-cols-3">
         {/* <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3"> */}
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
@@ -455,6 +466,43 @@ const TranscriptionsPage = () => {
                               ))}
                             </div>
                           </li>
+                          <Separator className="my-4" />
+                          {selectedTranscription.analysis.sentimentArray && (
+                          <li className="flex items-center justify-between">
+                            <span className="text-muted-foreground">Sentiment Array</span>
+                          </li>
+                          )}
+                          {selectedTranscription.analysis.sentimentArray && (
+                          <div>
+                            <Line
+                              data={{
+                                labels: selectedTranscription.analysis.sentimentArray.split(',').map((_:any, index:any) => index),
+                                datasets: [
+                                  {
+                                    fill: false,
+                                    // lineTension: 0,
+                                    backgroundColor: "#A83636",
+                                    borderColor: "#F58B8B",
+                                    data: selectedTranscription.analysis.sentimentArray.split(',').map(Number)
+                                  }
+                                ]
+                              }}
+                              options={{
+                                scales: {
+                                  y: {
+                                    min: -10,
+                                    max: 10
+                                  }
+                                },
+                                plugins: {
+                                  legend: {
+                                    display: false
+                                  }
+                                }
+                              }}
+                            />
+                          </div>
+                          )}
                         </ul>
                       </div>
                     )}
