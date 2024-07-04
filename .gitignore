@@ -34,3 +34,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+hooman-a960d-firebase-adminsdk-fqray-a20bbf6370.json
