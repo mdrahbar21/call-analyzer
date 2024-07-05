@@ -72,6 +72,9 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from "@/components/ui/label"
+
 
 const TranscriptionsPage = () => {
     const { data: session, status } = useSession();
@@ -105,9 +108,16 @@ const TranscriptionsPage = () => {
             setError2('Please select files first.');
             return;
         }
+        const summaryPrompt = event.target.elements['summaryPrompt'].value;
+        const sentimentPrompt = event.target.elements['sentimentPrompt'].value;
+        const tagsPrompt = event.target.elements['tagsPrompt'].value;
 
         const formData = new FormData();
         files.forEach(file => formData.append('files', file));
+
+        formData.append('summaryPrompt', summaryPrompt);
+        formData.append('sentimentPrompt', sentimentPrompt);
+        formData.append('tagsPrompt', tagsPrompt);
 
         try {
             setError2('')
@@ -275,7 +285,30 @@ const TranscriptionsPage = () => {
         <main className="grid flex-1 grid-cols-1 gap-4 p-4 sm:px-6 sm:py-0 md:grid-cols-2 md:gap-8 lg:grid-cols-3">
         {/* <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3"> */}
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
+            <form onSubmit={handleSubmit} className=''>
             <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
+              
+              <Card x-chunk="dashboard-05-chunk-1" className='sm:col-span-2'>
+                <CardHeader className="pb-2">
+                  <CardTitle className="">Summary and Sentiment Context</CardTitle>
+                  <CardDescription>A prompt for summarization</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Textarea 
+                        placeholder='Summary Prompt'
+                        className="mb-2 p-2 w-full border rounded"
+                        name="summaryPrompt"
+                      />
+                </CardContent>
+                <CardDescription className='pb-2 ml-7'>A prompt for sentiment Analysis</CardDescription> 
+                <CardContent>
+                    <Textarea 
+                        placeholder='Sentiment Prompt'
+                        className="mb-2 p-2 w-full border rounded"
+                        name="sentimentPrompt"
+                      />
+                </CardContent>
+              </Card>
               <Card
                 className="sm:col-span-2" x-chunk="dashboard-05-chunk-0"
               >
@@ -285,7 +318,8 @@ const TranscriptionsPage = () => {
                         Select Conversations (Call Recordings)
                     </CardDescription>
                     <div className="flex flex-nowrap items-center">
-                    <form onSubmit={handleSubmit} className="mb-4">
+                    {/* <form onSubmit={handleSubmit} className="mb-4"> */}
+                    <div className='mb-4'>
                       <input
                         type="file"
                         accept="audio/*"
@@ -293,7 +327,21 @@ const TranscriptionsPage = () => {
                         onChange={handleFileChange}
                         className="mb-2 p-2 border rounded"
                       />
-                      {!loading2 && (
+                      <CardDescription className='pb-2 '>A list of comma seperated tags.</CardDescription>
+                      <input 
+                        type='text'
+                        placeholder='Tags'
+                        className="mb-2 p-2 w-full border rounded"
+                        name="tagsPrompt"
+                      />
+                      
+                      </div>
+                    {/* </form> */}
+                    </div>
+                    {error2 && <p className="text-red-500 mt-3 ml-3">{error2}</p>}
+                </CardHeader>
+                <CardFooter>
+                {!loading2 && (
                         <Button type="submit" className="ml-4">
                           New Analysis
                         </Button>
@@ -319,12 +367,10 @@ const TranscriptionsPage = () => {
                           <span className="ml-2">Analyzing...</span>
                         </div>
                       )}
-                    </form>
-                    </div>
-                    {error2 && <p className="text-red-500 mt-3 ml-3">{error2}</p>}
-                </CardHeader>
+                </CardFooter>
               </Card>
             </div>
+            </form>
             </div>
           <div className="col-span-2 grid auto-rows-max items-start gap-4 md:gap-8">
             <Tabs defaultValue="all">
